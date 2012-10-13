@@ -1,0 +1,8 @@
+<div>
+	<h2>Aufgaben</h2>
+	<p>Auf den Unterseiten dieser Seite werden die Aufgabenlösungen für das Fach Game Engine Architecture im Wintersemester 2012/13 veröffentlicht.</p>
+	
+	<ol ng-controller="gea.NavigationController">
+		<li ng-repeat="entry in navigationModel[1].children" ng-include="'nav-entry'"></li>
+	</ol>
+</div>

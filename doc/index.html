@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de" ng-app="gea">
+<head>
+<title>Game Engine Architecture Projektdokumentation WS2012/13</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" href="resources/css/layout.css" type="text/css" />
+<script type="text/javascript" src="resources/js/angular-1.0.1.js"></script>
+<script type="text/javascript" src="resources/js/gea.js"></script>
+<script type="text/ng-template"  id="nav-entry">
+    <a href="#/{{entry.id}}">{{entry.title}}</a>
+    <ul>
+        <li ng-repeat="entry in entry.children" ng-include="'nav-entry'"></li>
+    </ul>
+</script>
+</head>
+
+<body>
+	<div id="main">
+		<header>
+			<h1>Game Engine Architecture Projektdokumentation WS2012/13</h1>
+		</header>
+		
+		<nav id="main-nav" ng-controller="gea.NavigationController">
+			<ul>
+				<li ng-repeat="entry in navigationModel" ng-include="'nav-entry'"></li>
+				<li><em><a href="http://tramberend.beuth-hochschule.de/lehre/12-ws/mmi-gea/" target="_blank" title="Modulseite">Modul: Game Engine Architecture</a></em></li>
+			</ul>
+		</nav>
+		
+		<section id="content" ng-view=""></section>
+	</div>
+
+	<footer>
+		Projektdokumentation von Dennis Fietz (s794827) und Max Goltzsche (s794761)
+	</footer>
+</body>
+</html>
