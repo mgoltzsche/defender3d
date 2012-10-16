@@ -35,8 +35,9 @@ footer {
 
 #main-nav {
 	margin: 77px 0 0 0;
-	width: 15%;
+	width: 170px;
 	float: left;
+	position: absolute;
 }
 
 #main-nav li li {
@@ -59,7 +60,7 @@ footer {
 }
 
 #content {
-	margin: 0 0 0 15%;
+	margin: 0 0 0 170px;
 	background: #ffffff;
 	border: 20px solid transparent;
 	border-radius: 10px;
@@ -76,5 +77,16 @@ a:hover {
 
 .img-right {
 	float: right;
+	clear: both;
 	margin: 0 0 20px 20px;
+}
+
+.img-left {
+	float: left;
+	clear: both;
+	margin: 0 20px 20px 0;
+}
+
+h2, h3, h4 {
+	clear: left;
 }

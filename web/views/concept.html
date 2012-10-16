@@ -1,4 +1,105 @@
 <div>
 	<h2>Konzept</h2>
-	<p>Dieser Inhalt wird zum 17.10.2012 veröffentlicht.</p>
+	
+	<h3>Original Spiel in Stichpunkten</h3>
+	<ul>
+		<li>Alle Gegner zerstörens</li>
+		<li>Alle Astronauten beschützen</li>
+		<li>Entführte Astronauten kehren als Mutanten zurück</li>
+		<li>Werden alle Astronauten entführt
+			<ul>
+				<li>Planet Explodiert</li>
+				<li>Planet wird von Mutanten besiedelt</li>
+				<li>Wird die Angrifsswelle der Mutanten überlebt, ist der Planet wieder normal</li>
+			</ul>
+        </li>
+		<li>Waffen
+			<ul>
+				<li>Laserkanone</li>
+				<li>Smartbombs</li>
+			</ul>
+        </li>
+		<li>Es gibt drei Leben und zusätzliche bei Überschreitung bestimmter Punktgrenze</li>
+		<li>Partikelsystem</li>
+		<li>Hyperantrieb</li>
+	</ul>
+	
+	<h3>Konzeption der modernen Interpretation</h3>
+	<h4>Ziel</h4>
+	<img src="resources/gfx/aufgabe_2/defscore.gif" title="Original-Defender-Highscore" class="img-right"/>
+	<p>Ziel des Spiels ist es mit Hilfe eines Raumschiffes alle gegnerischen Alienraumschiffe zu zerstören, die Kolonisten zu beschützen und dabei möglichst viele Punkte zu sammeln. Verschiedene Arten von gegnerischen Raumschiffen greifen den Spieler an. Die Entführerraumschiffe der Aliens versuchen dabei gezielt Kolonisten (Humanoiden) von der Oberfläche zu entführen und nach oben aus dem Spielfeld zu ziehen. Der Spieler erhält Punkte, wenn er ein gegnerisches Raumschiff zerstört oder einen entführten Kolonisten rettet indem er diesen einsammelt und auf dem Boden absetzt. Die erzielten Punkte können in einer Highscoreliste verglichen werden.</p>
+	<h4>Spielfeld</h4>
+	<img src="resources/gfx/aufgabe_2/defstart.gif" title="Originalspielfeld" class="img-right"/>
+	<p>Das Spielfeld des Originalspiels besteht aus einer zweidimensionalen Karte. An ihrem unteren Rand sieht man die Silhouette eines Planeten auf dem einige Kolonisten herumlaufen.</p>
+	<p>In der modernen Interpretation des Spiels wird dies durch eine dreidimensionale Karte ersetzt. Damit das Spielprinzip erhalten bleibt, wird diese durch einen Canyon begrenzt. Nach oben hin, wird das Spielfeld durch eine, elektrisch geladene Wolke begrenzt. Fliegt man in die Wolke, fallen die Systeme des Raumschiffes einer kurzen Zeit aus und das Raumschiff stürzt ab. Das Raumschiff zerschellt am Canyon, wenn er in einem zu steilen Winkel eintrifft. Nachdem die Wolke wieder verlassen wurde, funktionieren die Systeme nach kurzer Zeit wieder.</p>
+	<h4>Spielverlauf</h4>
+	<p>Wie auch im Originalspiel hat der Spieler drei Leben und fliegt durch das Spielfeld. Berührt er einen Gegner oder ein gegnerisches Geschoss, verliert er ein Leben. Der Spieler hat verloren, wenn er kein Leben mehr hat. Entführte Kolonisten kehren als Mutantenraumschiffe zurück und greifen das Raumschiff des Spielers an. Werden alle gegnerischen Raumschiffe (festgelegte Anzahl) zerstört, erreicht der Spieler das nächste Level.</p>
+	<p>Im Gegensatz zum Originalspiel, ist das Spiel bereits verloren, wenn alle Kolonisten entführt wurden. Außerdem wird nur ein Level implementiert. Außerdem kann der Spieler durch den Abschuss von drei Gegnern in kurzer Zeit in den sog. Berserkermodus gelangen. D.h. er hat für eine kurze Zeit beliebig viele Smartbombs.</p>
+	<h4>Spieler</h4>
+	<a href="resources/gfx/aufgabe_2/defender3d-example-screen.png" title="volle Auflösung">
+		<img src="resources/gfx/aufgabe_2/defender3d-example-screen-small.png" title="Entwurfsansicht des neuen Spiels" alt="" class="img-right"/>
+	</a>
+	<p>Der Spieler spawned an einem Startpunkt. Während im Originalspiel das Spielerraumschiff nur in zwei Dimension bewegt werden kann, wird die Navigation um die dritte Dimension erweitert. Neben Bewegen und Schießen kann der Spieler auch in den Hyperspace gehen um an einer zufälligen Position im Spielfeld wieder aufzutauchen.</p>
+	<h5>Waffen</h5>
+	<ul>
+		<li>Laserkanone
+			<ul>
+				<li>Kann überhitzen</li>
+			</ul>
+		</li>
+		<li>Smartbombs (Berserkermodus)
+			<ul>
+				<li>Zielsuchende Raketen</li>
+				<li>Begrenzte Zeit verfügbar</li>
+			</ul>
+		</li>
+	</ul>
+	<h4>Gegner</h4>
+	<img src="resources/gfx/aufgabe_2/defscori.gif" title="Originalgegner" class="img-right"/>
+	<ul>
+		<li>Lander / Abductor
+			<ul>
+				<li>Entführt Kolonisten</li>
+				<li>Langsame ungerichtete Laserkanone</li>
+			</ul>
+		</li>
+		<li>Mutant
+			<ul>
+				<li>Lander, der erfolgreich einen Kolonisten in die Wolke entführt hat und zurückgekehrt ist</li>
+				<li>Fliegt direkt auf Spieler zu und zerstört diesen dadurch</li>
+			</ul>
+		</li>
+		<li>Bomber
+			<ul>
+				<li>Schießt Bombenfächer, wenn sich Spieler nähert</li>
+			</ul>
+		</li>
+		<li>Baiter / Sourcer
+			<ul>
+				<li>Folgt und beschießt den Spieler</li>
+			</ul>
+		</li>
+		<li>Missile Pod
+			<ul>
+				<li>Wie Bomber, aber schießen zielsuchende Raketen</li>
+			</ul>
+		</li>
+		<li>Swarmers / Missiles
+			<ul>
+				<li>Träge zielsuchende Rakete</li>
+				<li>Explodiert nach max. 3 Sekunden Flugzeit</li>
+			</ul>
+		</li>
+	</ul>
+	
+	<h3>Präsentation</h3>
+	<iframe src="https://docs.google.com/presentation/embed?id=15r2F6QIJI7eBBgIzb_gtQxZNSFsMN_lgwnO6D0UQLqo&start=false&loop=false&delayms=3000" frameborder="0" width="480" height="389" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+	
+	<h3>Links</h3>
+	<ul>
+		<li>Bildquellen: <a href="http://seanriddle.com/willy2.html">http://seanriddle.com/willy2.html</a></li>
+		<li>Spielbares Flash-Remake: <a href="http://www.classicgamesarcade.com/game/21638/defender.html" target="_blank">http://www.classicgamesarcade.com/game/21638/defender.html</a></li>
+		<li>Eintrag in der deutschen Wikipedia: <a href="http://de.wikipedia.org/wiki/Defender_%28Computerspiel%29" target="_blank">http://de.wikipedia.org/wiki/Defender_%28Computerspiel%29</a></li>
+		<li>Eintrag in der englischen Wikipedia: <a href="http://en.wikipedia.org/wiki/Defender_%28video_game%29" target="_blank">http://en.wikipedia.org/wiki/Defender_%28video_game%29</a></li>
+	</ul>
 </div>
