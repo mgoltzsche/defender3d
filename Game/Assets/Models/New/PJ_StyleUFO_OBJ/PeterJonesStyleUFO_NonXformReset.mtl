@@ -1,0 +1,35 @@
+# Max2Mtl Version 4.0 Mar 10th, 2001
+#
+newmtl Copper
+Ka  0.0 0.0 0.0
+Kd  0.9 0.3 0.2
+Ks  1.0 0.8 0.8
+d  1.0
+Ns  8.0
+illum 2
+#
+newmtl Gold_24K
+Ka  0.0 0.0 0.0
+Kd  0.3 0.2 0.0
+Ks  1.0 0.9 0.8
+d  1.0
+Ns  10.0
+illum 2
+#
+newmtl GroundPlane
+Ka  0.6 0.6 0.6
+Kd  0.6 0.6 0.6
+Ks  0.9 0.9 0.9
+d  1.0
+Ns  0.0
+illum 2
+#
+newmtl Silver
+Ka  0.0 0.0 0.0
+Kd  0.8 0.8 0.8
+Ks  1.0 1.0 1.0
+d  1.0
+Ns  9.0
+illum 2
+#
+# EOF
