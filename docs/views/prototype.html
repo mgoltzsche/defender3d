@@ -1,4 +1,205 @@
 <div>
-	<h2>Prototyp</h2>
-	<p>Dieser Inhalt wird zum 28.11.2012 veröffentlicht.</p>
-</div>
+<h2>Prototyp</h2>
+
+<p>Im Folgenden wird die Umsetzung des Defender-Prototypen dokumentiert.
+Es wurden dabei noch keine fertigen Modelle, sondern nur Dummies, eingesetzt und auf detaillierte Animationen verzichtet.</p>
+
+<h3>Spielmenü</h3>
+<a href="resources/gfx/aufgabe_3/main_menu.jpg" ><img src="resources/gfx/aufgabe_3/main_menu.jpg" title="Hauptebene der Navigation" class="img-top-two"/></a>
+<a href="resources/gfx/aufgabe_3/netzwerk.jpg" ><img src="resources/gfx/aufgabe_3/netzwerk.jpg" title="Netzwerkfenster" class="img-top-two"/></a>
+<p>Das Spielmenü ist eine separate Szene.</p>
+<p>In der Hauptebene kann ein Singleplayer Spiel gestartet werden oder eines der Multiplayer Spieler ausgewählt  werden. Wird ein Multiplayer Spiel ausgewählt, so erscheint das Fenster für ein Netzwerkspiel. In dem Netzwerkfenster kann ausgewählt werden zwischen dem hosten eines Spiels oder man verbindet sich zu einem bestehendem Spiel.</p>
+
+<h3>Architektur</h3>
+<p>Dieser Abschnitt beschreibt die Softwarearchitektur des Spielablaufs.</p>
+
+<h4>CharacterFacade - Zentrale Verwaltung der Charaktere</h4>
+<p>Die CharakterFacade ist ein Singleton zur zentralen Verwaltung aller Charaktere. Diese werden von ihr Instanziiert und Zerstört. Gleichzeitig ist die CharacterFacade Registry der Charaktere. Dies ist für die Assoziationen zwischen den Charakteren wichtig. Außerdem können Spielevents wie die Zerstörung eines Charakters den anderen Charakteren auf diese Weise bekannt gemacht werden.</p>
+<p>Die CharacterFacade wird mit einer Liste von CharacterConfig-Objekten initialisiert, die definiert, wieviele Charaktere von welchem Typ im Verlauf des Spiels instanziiert werden sollen.</p>
+
+<h4>AbstractCharacterController - Basisverhalten für Charaktere</h4>
+<p>Ein Spielcharakter wird durch ein GameObjekt mit einer Instanz des MonoBehaviours “AbstractCharacterController” repräsentiert, das folgende öffentliche Methoden implementiert:
+<table summary="Methoden des AbstractCharacterController">
+<tr>
+	<td>Init() : void</td>
+	<td>Diese Methode wird nach dem Instanziieren eines Charakters von der CharacterFacade aufgerufen. Die Standardimplementierung positioniert den Charakter auf einer zufälligen Position auf der Karte.</td>
+</tr>
+<tr>
+	<td>OnDestroyThisCharacter() : void</td>
+	<td>Diese Methode wird von der CharacterFacade auf dem zu zerstörenden Charakter aufgerufen, bevor dieser zerstört wird.<br />Charaktere können dadurch interne Belegungen zu anderen Charakteren wieder abmelden.</td>
+</tr>
+<tr>
+	<td>OnDestroyCharacter(character: Transform) : void</td>
+	<td>Diese Methode wird von der CharacterFacade auf allen Charakteren aufgerufen, bevor ein Charakter zerstört wird. Der zu zerstörende Charakter wird dabei übergeben.
+Es ist Charakteren, die den zu zerstörenden referenzieren, dadurch möglich diese Assoziationen wieder zu lösen, bevor die Referenz null wird.</td>
+</tr>
+<tr>
+	<td>GenerateValidPosition() : Vector3d</td>
+	<td>Gibt eine valide zufällige Position auf dem Spielfeld zurück (unter Zuhilfenahme der CharacterFacade).</td>
+</tr>
+<tr>
+	<td>LookAt(Vector3 position) : void</td>
+	<td>Rotiert den Charakter in eine gewünschte Richtung.</td>
+</tr>
+<tr>
+	<td>moveTo(Vector3 position) : void</td>
+	<td>Fügt Beschleunigungskraft zur Bewegung zu angegebener Position hinzu. Siehe move.</td>
+</tr>
+<tr>
+	<td>move(Vector3 directionForce) : void</td>
+	<td>Lässt Beschleunigungskraft auf den Charakter wirken, um ihn in unter Berücksichtigung der Höchstgeschwindigkeit in gegebene Richtung zu bewegen. <br />Sofern die Distanz zwischen Geschwindigkeit und übergebenem Richtungsvektor größer ist als die Länge des Richtungsvektors, wird die Bremskraft
+		<blockquote>(1 - Richtungsvektorlänge / Distanz zwischen Geschwindigkeit und übergebenem Richtungsvektor) * 10f * -Geschwindigkeit</blockquote> hinzugefügt.</td>
+</tr>
+</table>
+</p>
+<p>Darüber hinaus enthält der AbstractCharacterController eine state-Property, die seinen Zustand definiert. Bei Zuweisung eines Zustandsobjekts auf diese wird dieser initialisiert. Bei jedem FixedUpdate-Aufruf wird dann der zugewiesene Zustand ausgeführt.</p>
+
+<h4>Statemachine</h4>
+<p>Zur dynamischen Definition von Zuständen wurde ein State-Pattern implementiert. AbstractCharacterController stellt den Kontext dar. Ein Zustand ist durch die Schnittstelle IState definiert und besitzt folgende Methoden:
+<table summary="Methoden der IState-Schnittstelle">
+<tr>
+	<td>Init(context: AbstractCharacterController) : void</td>
+	<td>Wird durch Setzen des Zustandes vom AbstractCharacterController aufgerufen, der sich selbst als Argument übergibt.</td>
+</tr>
+<tr>
+	<td>Run(context: AbstractCharacterController): void</td>
+	<td>Wird in jedem FixedUpdate-Aufruf auf dem CharacterController von diesem aufgerufen. Er übergibt sich dabei selbst als Argument.</td>
+</tr>
+</table>
+</p>
+<p>Weitere relevante Informationen zur Bearbeitung des Zustands bekommt jeder Zustand im Konstruktor übergeben. Einige Zustände führen ihre Funktion unter Verwendung anderer Zustände aus. Viele Zustände bekommen außerdem ein weiteres Zustandsobjekt als Transition übergeben, das im AbstractCharacterController gesetzt wird, sobald der Zustand eine Endbedingung erreicht hat. Dadurch sind Entscheidungsbäume möglich.</p>
+<p>Im Folgenden werden die implementierten Zustände aufgeführt:
+<table>
+<tr>
+	<td>NullState</td>
+	<td>Leere IState-Implementierung. Macht Null-Prüfungen überflüssig.</td>
+</tr>
+<tr>
+	<td>Frozen</td>
+	<td>Setzt den Charakter-Rigidbody auf isKinematic = true um alle Bewegungen zu stoppen. Sobald CharacterFacade.frozen == false wird der im Konstruktor übergebene zuletzt gesetzte Zustand gesetzt. Der Charakter kann dadurch "eingefroren" werden.</td>
+</tr>
+<tr>
+	<td>MoveTo</td>
+	<td>Bewegt den Charakter zu einer im Zustandskonstruktor übergebenen Position.</td>
+</tr>
+<tr>
+	<td>Patrol</td>
+	<td>Bewegt Charakter zu zufälligen Punkten auf dem Spielfeld (Nutzt intern MoveTo).</td>
+</tr>
+<tr>
+	<td>Wait</td>
+	<td>Lässt den Charakter auf der aktuellen Position verharren (Nutzt intern MoveTo).</td>
+</tr>
+<tr>
+	<td>Follow</td>
+	<td>Im Konstruktor übergebenem Charakter bzw. Transform-Objekt folgen (Nutzt intern MoveTo).<br/>Setzt den Transitionszustand, sofern vorhanden, wenn beim verfolgten Objekt angekommen.</td>
+</tr>
+<tr>
+	<td>Attack</td>
+	<td>Im Konstruktor übergebenen Charakter bzw. Transform-Objekt angreifen. Der Zustand erbt von Follow. Der Spieler wird verfolgt und im Sekundentakt beschossen.</td>
+</tr>
+<tr>
+	<td>Abduct</td>
+	<td>Entführung eines im Konstruktor übergebenen Kolonisten. Bei Initialisierung wird der Kolonist angehängt und sofort in den MoveTo-Zustand gewechselt um zu einem Punkt 800m über der aktuellen Position zu fliegen.</td>
+</tr>
+<tr>
+	<td>Mutate</td>
+	<td>Zerstört den ausführenden Charakter und instanziiert einen anderen nach einem Übergebenen Bauplan (Transform) an dessen Stelle.</td>
+</tr>
+<tr>
+	<td>PlayerControlled</td>
+	<td>Bewegt Charakter der Spielereingaben entsprechend.</td>
+</tr>
+<tr>
+	<td>SystemFailure</td>
+	<td>Aktiviert Gravitation für den ausführenden Charakter. Setzt nach Ablauf gegebener Zeit im Konstruktor übergebenen Zustand.</td>
+</tr>
+</table>
+</p>
+
+<h3>Singleplayer</h3>
+<p>Das Spielfeld wurde als langer durch Felsen begrenzter Canyon umgesetzt. Fliegt der Defender nach oben aus dem Canyon, fallen seine Systeme aus (siehe SystemFailure-Zustand) und er sinkt durch die Gravitation wieder zurück ins Spielfeld.
+<p>Die für den Prototypen implementierten Charaktere und ihre möglichen Zustände werden im Folgenden gezeigt:
+<ul>
+	<li>Defender
+		<ul>
+			<li>PlayerControlled</li>
+			<li>SystemFailure</li>
+		</ul>
+	</li>
+	<li>Colonist
+		<ul>
+			<li>Patrol</li>
+		</ul>
+	</li>
+	<li>Lander
+		<ul>
+			<li>Follow</li>
+			<li>Mutate</li>
+			<li>Abduct</li>
+		</ul>
+	</li>
+	<li>Mutant
+		<ul>
+			<li>Follow</li>
+			<li>Patrol</li>
+		</ul>
+	</li>
+	<li>Saucerer
+		<ul>
+			<li>Patrol</li>
+			<li>Attack</li>
+		</ul>
+	</li>
+</ul>
+</p>
+
+<h3>Multiplayer - Deathmatch</h3>
+<a href="resources/gfx/aufgabe_3/deathmatch.jpg" ><img src="resources/gfx/aufgabe_3/deathmatch.jpg" title="Deathmatch Spielfeld" class="img-right"/></a>
+<p>Für das Deathmatch wurde ein größeres Spielfeld mit Hürden bzw. Deckungsmöglichkeiten erstellt.</p>
+<p>Die Spieler werden nach dem Zufallsprinzip auf dem Spielfeld instanziiert. Wird ein Spieler abgeschossen, so wird er an einer anderen Position gerespawned.</p>
+<p>Nach einer festgelegten Zeit wird das Spiel beendet.</p>
+
+<h3>Steuerung durch den Spieler</h3>
+<p>Die Steuerung für den Spieler wurde wie folgt implementiert:
+<table summary="Spielersteuerung" class="controls">
+<tr>
+	<th>Taste</th>
+	<th>Funktion</th>
+<tr>
+<tr>
+	<td><span class="key">W</span></td>
+	<td>positive Beschleunigung</td>
+</tr>
+<tr>
+	<td><span class="key">S</span></td>
+	<td>negative Beschleunigung</td> 
+</tr>
+<tr>
+	<td><span class="key">A</span></td>
+	<td>Bewegung nach Links (Strafe)</td>
+</tr>
+<tr>
+	<td><span class="key">D</span></td>
+	<td>Bewegung nach Rechts (Strafe)</td>
+</tr>
+<tr>
+	<td><span class="key">Q</span></td>
+	<td>Bewegung nach Oben (Strafe)</td>
+</tr>
+<tr>
+	<td><span class="key">Y</span></td>
+	<td>Bewegung nach Unten (Strafe)</td>
+</tr>
+<tr>
+	<td>Fire 1 bzw. Maustaste 1</td>
+	<td>Feuern</td>
+</tr>
+</table>
+Mit Hilfe der Maus wird gezielt. Die Laserkanone wird dabei direkt auf das anvisiertes Objekt ausgerichtet. Dieses Objekt wird durch einen Raycast identifiziert.
+</p>
+<p>Alle Bewegungen werden als Beschleunigungskraft angewendet, um ein realistisches Spielerlebnis zu gewährleisten und die Geschwindigkeiten unabhängig von später noch anzupassenden Modellen bzw. deren Collidern zu definieren.</p>
+
+<h3>Spielbarer Prototyp</h3>
+<a href="../gea-build">Prototyp im Unity Webplayer starten</a><br />
+<a href="../gea-build/defender.zip">Prototyp standalone herunterladen (Windows)</a>

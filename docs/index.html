@@ -6,6 +6,17 @@
 <link rel="stylesheet" href="resources/css/layout.css" type="text/css" />
 <script type="text/javascript" src="resources/js/angular-1.0.1.js"></script>
 <script type="text/javascript" src="resources/js/gea.js"></script>
+<script type="text/javascript" src="http://webplayer.unity3d.com/download_webplayer-3.x/3.0/uo/UnityObject.js"></script>
+<script type="text/javascript">
+		<!--
+		function GetUnity() {
+			if (typeof unityObject != "undefined") {
+				return unityObject.getObjectById("unityPlayer");
+			}
+			return null;
+		}
+		-->
+</script>
 <script type="text/ng-template"  id="nav-entry">
     <a href="#/{{entry.id}}">{{entry.title}}</a>
     <ul>

@@ -1,4 +1,121 @@
 <div>
 	<h2>Das Spiel</h2>
-	<p>Dieser Inhalt wird zum 21.01.2013 veröffentlicht.</p>
+	
+	<p>In einer Schlucht, über der elektromagnetische Stürme wüten, beschützten Defender eine Kolonie vor der Alieninvasion.</p>
+	<p>Dieser Abschnitt erläutert die zusätzlichen Funktionalitäten im Gegensatz zum Prototypen.</p>
+	
+	<h3>Architektur im Allgemeinen</h3>
+	<p>Die im Prototypen implementierte Architektur hat sich nur geringfügig verändert. Im Folgenden werden die implementierten Pattern gezeigt:</p>
+		<ul>
+			<li>Facade/Strategy: GameFacade (MonoBehaviour)
+				<ul>
+					<li>Indizierung von Charakter-GameObjects und zentrale Funktionalität, die mehrere GameObjects betrifft</li>
+					<li>Zwei Implementierungen (GameFacade, NetworkGameFacade) zur Behandlung von lokalen und Netzwerkspielen</li>
+					<li>Netzwerk: Ausführung von zu synchronisierender Spielfunktionalität (Abschuss eines Charakters, Spielstart, etc.) auf dem Server</li>
+				</ul>
+			</li>
+			<li>State: State.IState
+				<ul>
+					<li>KI-Verhalten</li>
+					<li>Zustand des HUD</li>
+				</ul>
+			</li>
+		</ul>
+	</p>
+	
+	<p>Folgende ím Entwurf definierte Funktionalität wurde nicht implementiert:
+		<ul>
+			<li>Missile Pod und Missile (KI-Gegner)</li>
+			<li>Bomber (KI-Gegner)</li>
+			<li>Berserkermodus (Bewaffnung mit zielsuchenden Raketen für kurze Zeit als Belohnung für mehrere Abschüsse)</li>
+		</ul>
+	</p>
+	
+	
+	<h3>Konkrete Probleme und Lösungen</h3>
+	<h4>Bewegung der Charaktere mit Physik und Antriebsanimation</h4>
+	<p>Das MonoBehaviour AbstractCharacterController ist Oberklasse aller Spielcharaktere. In jedem AbstractCharacterController existieren Methoden zur Bewegung des Charakters: MoveTo(position), Move(direction), TurnTo(position), Turn(rotation).
+	Die Methoden, die als Argument eine Position im Weltkoordinatensystem erhalten, werden in Zuständen vom Typ IState aufgerufen (in FixedUpdate()), die der KI zugewiesen sind. Die anderen Methoden dienen direkten Eingabe der aktuellen Richtungs- oder Rotationskräfte und werden für die direkte Steuerung durch den Spieler benötigt.</p>
+	
+	<h5>Positionsänderung</h5>
+	<p>Die Richtung, in die eine KI laufen soll wird in der MoveTo-Methode aus der übergebenen Position des nächsten Wegpunkts ermittelt und als Beschleunigungskraft angewendet. Allerdings wird sie zuvor mit dem Faktor 3 multipliziert, damit die KI schneller eine höhere Geschwindigkeit erreicht.</p>
+	<p>Die Anwendung der Richtung allein als Beschleunigungskraft ist allerdings in den meisten Fällen nicht ausreichend, da ein Charakter bzw. Rigidbody bereits eine Geschwindigkeit in eine andere Richtung besitzen kann. Die Richtungskraft kann den Charakter dadurch nur sehr langsam oder gar nicht auf die gewünschte Position bringen. Sehr unpräzise Bewegungen der KI bis hin zum endlosen Kreisen sind die Folge.
+		Zur Behebung des Problems wurde der aktuelle Geschwindigkeitsvektor (rigidbody.velocity) auf jede Normale des gewünschten Bewegungsrichtungsvektors (horizontal und vertikal) projiziert und die resultierenden Vektoren vom Beschleunigungsvektor abgezogen.</p>
+	<p>Außerdem wird eine Bremsfunktion benötigt, damit der Charakter sich nicht auf Grund zu hoher Geschwindigkeit über die zu erreichende Position hinaus bewegt. Ihr Ergebnis wird der Beschleunigungskraft hinzugefügt. Zu diesem Zweck wird die vorhandene Bremsfunktion des Prototypen verwendet: <br />
+		(1 - Richtungsvektorlänge / Distanz zwischen Geschwindigkeit und übergebenem Richtungsvektor) * 10f * -Geschwindigkeit</p>
+	<p>Damit die Charaktere keine extremen ruckartigen Bewegungen aufweisen, die durch beliebig große Beschleunigungskräfte zustande kommen können, wird außerdem für jeden Charakter eine Maximalbeschleunigung festgelegt, die nicht überschritten werden darf.</p>
+	<p>Darüber hinaus wird außerdem eine Maximalgeschwindigkeit festgelegt, um die Spielbarkeit besser konfigurieren zu können.</p>
+	
+	<h5>Rotation</h5>
+	<p>Auch ohne aktive Rotation eines Charakters kann dieser durch Kollision mit seiner Umgebung rotiert werden. Auch hier gilt es die auf den Charakter einwirkenden Kräfte zu berücksichtigen. Außerdem sollte sichergestellt werden, dass sich ein Charakter hauptsächlich nach oben ausrichtet, da dies realistischem Verhalten entspricht.
+		Zu diesem Zweck wird eine Stabilisierungskraft benötigt. Glücklicherweise bietet <a href="http://wiki.unity3d.com/index.php?title=TorqueStabilizer">http://wiki.unity3d.com/index.php?title=TorqueStabilizer</a> bereits eine Lösung für dieses Problem.
+	<p>Analog zu MoveTo() dreht TurnTo() einen Charakter in die Richtung der übergebenen Position. Diese Implementierung basiert auf der zuvor erwähnten Lösung zur Rotationsstabilisierung.</p>
+	
+	<h5>Triebwerkanimation</h5>
+	<p>Die Verwendung von Beschleunigungskräften zur Positionierung und Rotation erlaubt die Triebwerkanimation eines Raumschiffs bzw. Defenders. Antriebe werden mit Hilfe von Partikelsystemen simuliert, deren Partikellebensdauer abhängig von der Beschleunigung gesetzt wird.
+	Die Bewegungsbeschleunigung wird durch die Maximalbeschleunigung begrenzt und eignet sich daher als normierter Wert.</p>
+	<p>Die Rotationsbeschleunigung besitzt keinen Maximalwert. Ihre Triebwerkanimation wird daher in dieser Implementierung vereinfacht als konstanter Wert oder Null angenommen. Dies geschieht in Abhängigkeit von der lokalen Position und Rotation des Triebwerks im Charakterkoordinatensystem.</p>
+	
+	
+	<h4>Wegpunkte</h4>
+	<p>U.A. zur Generierung von sinnvollen Wegpunkten wurde eine TerrainFacade implementiert. Sie enthält alle nötigen Koordinaten sowie eine Methode zur Generierung von zufälligen Positionen innerhalb des Terrains unter Zuhilfenahme von Terrain.SampleHeight().</p>
+	
+	
+	<h4>Hindernisumgehung der KI</h4>
+	<p>Um die Bewegung der KI vorbei an Hindernissen und anderen Charakteren zu gewährleisten, wird die Funktion "AvoidObstacles" implementiert. Diese Funktion prüft mit Hilfe von rigidbody.SweepTest(), ob der Collider des Charakters in Richtung und Entfernung des Geschwindigkeitsvektors auf Hindernisse trifft und leitet gegebenenfalls eine Korrektur der Bewegungsrichtung ein. Unterschreitet die Geschwindigkeit 0.3, wird als Prüfrichtung die Richtung des nächsten Wegpunkts verwendet. Auf diese Weise wird sichergestellt, dass stehende oder sehr langsame Charaktere auch Hindernissen ausweichen, wenn sie direkt vor ihnen stehen.
+		Als Kollisionsnormale eines solchen Tests wird schließlich die durch SweepTest() erhaltene (Terrainnormale) oder die Geschwindigkeit des Charakters angenommen, mit dem die Kollision stattgefunden hat.</p>
+	<p>Eine Umgehungsposition ist eine Art Wegpunkt, der vor dem aktuellen eingefügt wird. Grundsätzlich ist sie im Charakterkoordinatensytem als Vielfaches der Reflektion der Testrichtung auf der Kollisionsnormale definiert, wobei die y-Werte der Ausgangsnormalen der Berechnung für den Colonist (ColonistController.ModifyObstacleNormal()) zuvor auf 0 gesetzt werden, damit dieser auf dem Boden bleibt.</p>
+	<p>Dieses Verfahren hat sehr viele Schwächen:
+		<ul>
+			<li>Colonists können u.U. über Abgründe hinaus laufen.</li>
+			<li>Bereits bremsende und in eine andere Richtung beschleunigende Charaktere können unnötig von ihrem Weg abgebracht werden, wenn sie bereits eine Hohe Geschwindigkeit in Bremsrichtung aufweisen und dort auf ein Hindernis treffen.</li> 
+			<li>Steht ein Charakter zwischen zwei parallelen Hindernissen, läuft er endlos zwischen ihnen hin und her. Dies wird durch die Betrachtung der Reflektion zwei aufeinander zeigender Normalen deutlich</li>
+		</ul>
+	</p>
+	<p>Als Notlösung wird ein kleiner zufälliger seitlicher Vektor zur Umgehungsposition addiert, sofern das Punktprodukt von Kollisionsnormale und Testnormale gegen -1 tendiert.</p>
+	<p>Mit einem Spezialfall für das Terrain, bei dem mit Hilfe von Rundumraycasts nach einem guten nächsten Weg gesucht wird, sollte ein besseres Ergebnis erzielt werden können.</p>
+	
+
+	<h4>Zielen</h4>
+	<p>Durch die Verschiebung der Kamera im Vergleich zum Defender, ist die Mitte des Bildschirmes nicht automatisch der Punkt an dem abgefeuerte Laser eintreffen. Um dies dennoch sicherzustellen wird ein Raycast von der Kamera in Blickrichtung durchgeführt und gegebenenfalls die Kanone auf das durch den Raycast getroffene Objekt ausgerichtet. Um andere Objekte von vornherein aus dem Raycast auszuschließen, wurden alle GameObjects außer dem Terrain und den Charakteren auf den IgnoreRaycast-Layer gesetzt und das Auslösen von Triggern durch Raycasts deaktiviert (Edit&rarr;Project Settings&rarr;Physics).</p>
+
+	
+	<h4>Netzwerk</h4>
+	<p>Anstelle der Standard-Sendrate von 15 wurde 30 gesetzt um das Ruckeln im Netzwerk zu minimieren (Edit&rarr;Project Settings&rarr;Network).</p>
+	
+	<h5>Spiellogik</h5>
+	<p>Jeder Spieler instanziiert direkt nach dem beitreten eines Spiels seinen Charakter über das Netzwerk und behält die Kontrolle über diesen. Auf allen anderen Systemen ist der AbstractCharacterController des Charakter-GameObjects deaktiviert. Ebenso verhält es sich mit dem Server und der KI. Das Spiel beginnt, wenn der Host den Startbutton klickt.</p>
+	<p>Alle Spiellogikaktionen werden auf dem Server ausgeführt und die Clienten anschließend darüber informiert, um das Spiel zwischen allen Beteiligten synchron zu halten:
+		<ul>
+			<li>StartGame()</li>
+			<li>FinishGame()</li>
+			<li>AttachColonist()</li>
+			<li>DetachColonist()</li>
+			<li>Hit()</li>
+		</ul>
+	</p>
+	
+	<h5>Triebwerkanimation</h5>
+	<p>Die Animation aller Triebwerke in einem Netzwerkspiel ist aufwändig, da ständig RPCs über die aktuelle Beschleunigung eines Charakters ausgetauscht werden müssten.</p>
+	<p>Alternativ wird die Beschleunigung eines Netzwerkcharakters im DerivedEngineAnimationController aus seiner Geschwindigkeit errechnet. Dabei kommen aber auch andere Kräfte als die aktive Beschleunigung des Netzwerkcharakters zum Tragen. Außerdem kann die Beschleunigung erst abgeleitet werden, nachdem die Beschleunigung des Netzwerkcharakters sich in siner Geschwindigkeit niederschlägt. Dies ist nicht realistisch, aber kann vernachlässigt werden, da es besser aussieht als gar kein Triebwerk und im Gefecht auch nicht auffällt.</p>
+	
+	<h3>Optimierung</h3>
+	<h4>Objekt Pool</h4>
+	<p>Die verschiedenen Objekte in dem Spiel werden bereits zu Beginn eines Spiels instanziiert und wiederverwendet. So wird beispielsweise zu Beginn ein Pool von den Laserprojektilen angelegt. Aus diesem Pool wird dann bei jedem Schuss ein Objekt verwendet um einen Schuss zu animieren. Nachdem das Projektil kollidiert oder die "Lebenszeit" abgelaufen ist, wird es deaktiviert und kann beim nächsten Schuss wieder aktiviert und animiert werden. Alle Spielcharaktere mit Ausnahme des Mutants werden ebenso bei Spielbeginn instanziiert und anschließend wiederverwendet.</p>
+	
+	
+	<h3>Präsentation</h3>
+	<iframe src="https://docs.google.com/presentation/d/16u21bwgfJ3osQiDH7W952at8lvqSxbI1Hb5n62yY7Is/embed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="749" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+	
+	<h3>Executables</h3>
+	<ul>
+		<li><a href="https://github.com/mgoltzsche/defender3d/releases/download/v1.0.0/defender-final-windows.zip">Defender for Windows x86_64</a></li>
+		<li><a href="https://github.com/mgoltzsche/defender3d/releases/download/v1.0.0/defender-final-osx.zip">Defender for OSX x86</a></li>
+		<li><a href="https://github.com/mgoltzsche/defender3d/releases/download/v1.0.0/defender-final-linux.tar.bz2">Defender for Linux x86 / x86_64</a></li>
+	</ul>
+	<h3>Source code</h3>
+	<ul>
+		<li><a href="https://github.com/mgoltzsche/defender3d">GitHub repository</a></li>
+		<li><a href="https://github.com/mgoltzsche/defender3d/archive/refs/tags/v1.0.0.zip">Direct download link</a></li>
+	</ul>
 </div>
